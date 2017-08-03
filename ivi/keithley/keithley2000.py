@@ -27,6 +27,7 @@ THE SOFTWARE.
 
 import time
 import struct
+import math
 
 from .. import ivi
 from .. import dmm
@@ -109,3 +110,40 @@ class keithley2000(scpi.dmm.Base, scpi.dmm.MultiPoint, scpi.dmm.SoftwareTrigger)
         # reset
         if reset:
             self.utility.reset()
+
+    def _get_resolution(self):
+        # The DMM only supports specifying the resolution in digits, while the
+        # IviDMM module requires resolution absolute. So we convert based on the
+        # current range setting.
+        if not self._driver_operation_simulate and not self._get_cache_valid():
+            range_ = self.range
+            func = self._get_measurement_function()
+            if func in MeasurementResolutionMapping:
+                cmd = MeasurementResolutionMapping[func]
+                dig = int(self._ask("%s?" % (cmd)))
+                # convert digits to absolute resolution
+                abs_resolution = range_ * 10**(-dig+1)
+                # round down to even power of 10
+                abs_resolution = math.pow(10,
+                        math.floor(math.log10(abs_resolution)))
+                self._resolution = abs_resolution
+                self._set_cache_valid()
+        return self._resolution
+
+    def _set_resolution(self, value):
+        # The DMM only supports specifying the resolution in digits, while the
+        # IviDMM module requires resolution absolute. So we convert based on the
+        # current range setting.
+        value = float(value)
+        # round up to even power of 10
+        value = math.pow(10, math.ceil(math.log10(value)))
+        if not self._driver_operation_simulate:
+            range_ = self.range
+            func = self._get_measurement_function()
+            if func in MeasurementResolutionMapping:
+                # Convert absolute resoltuion resolution to digits
+                dig = math.ceil(math.log10(range_ / value)+1)
+                cmd = MeasurementResolutionMapping[func]
+                self._write("%s %g" % (cmd, dig))
+        self._resolution = value
+        self._set_cache_valid()
