@@ -385,11 +385,11 @@ class Base(ivi.IviContainer):
             t = 0
         elif range_type == 'current':
             t = 1
-        k = dcpwr.get_range(self._output_range[index], t, range_val)
+        k = dcpwr.get_range(self._output_spec[index]['range'], t, range_val)
         if k < 0:
             raise ivi.OutOfRangeException()
-        self._output_spec[index]['voltage_max'] = self._output_range[index][k][0]
-        self._output_spec[index]['current_max'] = self._output_range[index][k][1]
+        self._output_spec[index]['voltage_max'] = self._output_spec[index]['range'][k][0]
+        self._output_spec[index]['current_max'] = self._output_spec[index]['range'][k][1]
         pass
     
     def _output_configure_ovp(self, index, enabled, limit):

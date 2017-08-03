@@ -284,8 +284,8 @@ class agilent603xA(ivi.Driver, dcpwr.Base, dcpwr.Measurement):
         k = dcpwr.get_range(self._output_spec[index]['range'], t, range_val)
         if k < 0:
             raise ivi.OutOfRangeException()
-        self._output_voltage_max[index] = self._output_range[index][k][0]
-        self._output_current_max[index] = self._output_range[index][k][1]
+        self._output_voltage_max[index] = self._output_spec[index]['range'][k][0]
+        self._output_current_max[index] = self._output_spec[index]['range'][k][1]
         # do nothing - autoranging supply; no command to set range
     
     def _output_query_current_limit_max(self, index, voltage_level):
