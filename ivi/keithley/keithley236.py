@@ -3,6 +3,7 @@
 Python Interchangeable Virtual Instrument Library
 
 Copyright (c) 2015 Hermann Kraus
+Copyright (c) 2017 Alson van der Meulen
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,9 +24,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
 """
+from __future__ import division
 
 from .. import ivi
 from .. import dcpwr
+
 
 class keithley236(dcpwr.Base, dcpwr.Measurement, ivi.Driver):
     """Keitley 236 Source Measure Unit driver.
@@ -58,7 +61,33 @@ class keithley236(dcpwr.Base, dcpwr.Measurement, ivi.Driver):
         self._output_spec = [
             {
                 'range': {
-                    'P110V': (110.0, 0.1),
+                    'P1.1V100mA': (1.1, 100e-3),
+                    'P1.1V10mA': (1.1, 10e-3),
+                    'P1.1V1mA': (1.1, 1e-3),
+                    'P1.1V100uA': (1.1, 100e-6),
+                    'P1.1V10uA': (1.1, 10e-6),
+                    'P1.1V1uA': (1.1, 1e-6),
+                    'P1.1V100nA': (1.1, 100e-9),
+                    'P1.1V10nA': (1.1, 10e-9),
+                    'P1.1V1nA': (1.1, 1e-9),
+                    'P11V100mA': (11.0, 100e-3),
+                    'P11V10mA': (11.0, 10e-3),
+                    'P11V1mA': (11.0, 1e-3),
+                    'P11V100uA': (11.0, 100e-6),
+                    'P11V10uA': (11.0, 10e-6),
+                    'P11V1uA': (11.0, 1e-6),
+                    'P11V100nA': (11.0, 100e-9),
+                    'P11V10nA': (11.0, 10e-9),
+                    'P11V1nA': (11.0, 1e-9),
+                    'P110V100mA': (110.0, 100e-3),
+                    'P110V10mA': (110.0, 10e-3),
+                    'P110V1mA': (110.0, 1e-3),
+                    'P110V100uA': (110.0, 100e-6),
+                    'P110V10uA': (110.0, 10e-6),
+                    'P110V1uA': (110.0, 1e-6),
+                    'P110V100nA': (110.0, 100e-9),
+                    'P110V10nA': (110.0, 10e-9),
+                    'P110V1nA': (110.0, 1e-9),
                 },
                 'ovp_max': 0,
                 'voltage_max': 110.0,
@@ -75,7 +104,7 @@ class keithley236(dcpwr.Base, dcpwr.Measurement, ivi.Driver):
         self._identity_instrument_firmware_revision = ""
         self._identity_specification_major_version = 3
         self._identity_specification_minor_version = 0
-        self._identity_supported_instrument_models = ['PSU']
+        self._identity_supported_instrument_models = ['236']
 
         self._init_outputs()
 
@@ -87,15 +116,15 @@ class keithley236(dcpwr.Base, dcpwr.Measurement, ivi.Driver):
         # interface clear
         if not self._driver_operation_simulate:
             try:
-                return self._interface.clear()
+                self._interface.clear()
             except (AttributeError, NotImplementedError):
                 self._write("X")
 
         # check ID
         if id_query and not self._driver_operation_simulate:
-            id = self.identity.instrument_model
+            id_ = self.identity.instrument_model
             id_check = self._instrument_id
-            id_short = id[:len(id_check)]
+            id_short = id_[:len(id_check)]
             if id_short != id_check:
                 raise Exception("Instrument ID mismatch, expecting %s, got %s", id_check, id_short)
         # reset
@@ -335,23 +364,26 @@ class keithley236(dcpwr.Base, dcpwr.Measurement, ivi.Driver):
         else:
             raw = self._ask("U0X")
             self._identity_instrument_model = raw[:3]
-            self._identity_instrument_firmware_revision = raw[3:6]
+            self._identity_instrument_firmware_revision = raw[3:].strip()
             self._set_cache_valid(True, 'identity_instrument_model')
             self._set_cache_valid(True, 'identity_instrument_firmware_revision')
 
+    def _get_identity_instrument_manufacturer(self):
+        if self._get_cache_valid():
+            return self._identity_instrument_manufacturer
+        self._load_id_string()
+        return self._identity_instrument_manufacturer
+
     def _get_identity_instrument_model(self):
-        if not self._get_cache_valid():
-            self._load_id_string()
+        if self._get_cache_valid():
+            return self._identity_instrument_model
+        self._load_id_string()
         return self._identity_instrument_model
 
-    def _get_identity_instrument_serial_number(self):
-        if not self._get_cache_valid():
-            self._load_id_string()
-        return self._identity_instrument_serial_number
-
     def _get_identity_instrument_firmware_revision(self):
-        if not self._get_cache_valid():
-            self._load_id_string()
+        if self._get_cache_valid():
+            return self._identity_instrument_firmware_revision
+        self._load_id_string()
         return self._identity_instrument_firmware_revision
 
     def _utility_reset(self):
@@ -359,3 +391,23 @@ class keithley236(dcpwr.Base, dcpwr.Measurement, ivi.Driver):
             self._write("J0X")
             self._clear()
             self.driver_operation.invalidate_all_attributes()
+
+class keithley237(keithley236):
+    def __init__(self, *args, **kwargs):
+        self.__dict__.setdefault('_instrument_id', '237')
+        super(keithley237, self).__init__(*args, **kwargs)
+
+        self._output_spec[0]['range'].update({
+                    'P1100V10mA': (1100.0, 10e-3),
+                    'P1100V1mA': (1100.0, 1e-3),
+                    'P1100V100uA': (1100.0, 100e-6),
+                    'P1100V10uA': (1100.0, 10e-6),
+                    'P1100V1uA': (1100.0, 1e-6),
+                    'P1100V100nA': (1100.0, 100e-9),
+                    'P1100V10nA': (1100.0, 10e-9),
+                    'P1100V1nA': (1100.0, 1e-9),
+                })
+
+        self._identity_description = "Keitley 237 Source Measure Unit driver"
+        self._identity_instrument_model = "237"
+        self._identity_supported_instrument_models = ['237']
