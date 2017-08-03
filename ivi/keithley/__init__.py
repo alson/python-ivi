@@ -26,3 +26,5 @@ THE SOFTWARE.
 
 # Source measure units
 from .keithley236 import keithley236
+
+# Digital multimeters
