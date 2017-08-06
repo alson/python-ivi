@@ -3,6 +3,7 @@
 Python Interchangeable Virtual Instrument Library
 
 Copyright (c) 2015 Hermann Kraus
+Copyright (c) 2017 Alson van der Meulen
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,3 +26,4 @@ THE SOFTWARE.
 """
 
 # Digital multimeters
+from .keithley192 import keithley192
