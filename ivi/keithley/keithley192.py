@@ -35,7 +35,7 @@ from .. import ivi
 from .. import dmm
 
 TriggerSourceMapping = {
-        'imm': '5',
+        'immediate': '5',
         'bus': '3',
         }
 MeasurementFunctionMapping = {
@@ -125,7 +125,7 @@ class keithley192(ivi.Driver, dmm.Base, dmm.MultiPoint, dmm.SoftwareTrigger,
         self._identity_specification_minor_version = 0
         self._identity_supported_instrument_models = ['192']
 
-        self._trigger_source = 'imm'
+        self._trigger_source = 'immediate'
         self._advanced_aperture_time = 0.1
         self._advanced_aperture_time_units = 'seconds'
 
@@ -172,7 +172,7 @@ class keithley192(ivi.Driver, dmm.Base, dmm.MultiPoint, dmm.SoftwareTrigger,
         """
         #print(data, "\n")
         if clear_data and data[-1] == 'X' \
-                and self._trigger_source.lower() == 'imm':
+                and self._trigger_source.lower() == 'immediate':
             # Do immediate read to clear the result triggered by X when set to
             # immediate triggering.
             return super(keithley192, self)._ask(data, encoding=encoding)
@@ -336,7 +336,7 @@ class keithley192(ivi.Driver, dmm.Base, dmm.MultiPoint, dmm.SoftwareTrigger,
             raise ivi.ValueNotSupportedException()
         if self._trigger_source.lower() \
                 == self._trigger_multi_point_sample_trigger.lower() \
-                == 'imm' \
+                == 'immediate' \
                 and self._trigger_multi_point_count > 1:
             raise ivi.ValueNotSupportedException()
         if self._trigger_multi_point_count == self._READINGS_MEMORY_SIZE:
@@ -347,7 +347,7 @@ class keithley192(ivi.Driver, dmm.Base, dmm.MultiPoint, dmm.SoftwareTrigger,
                 self._trigger_multi_point_sample_trigger.lower()):
             trigger = TriggerSourceMapping['bus']
         else:
-            trigger = TriggerSourceMapping['imm']
+            trigger = TriggerSourceMapping['immediate']
         trigger = str((int(trigger) & 0xfe) | trigger_last_bit)
         if self._driver_operation_simulate:
             return
