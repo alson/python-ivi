@@ -29,7 +29,6 @@ from __future__ import division
 import warnings
 import re
 from collections import OrderedDict
-import time
 
 from .. import ivi
 from .. import dmm
@@ -374,7 +373,6 @@ class keithley192(ivi.Driver, dmm.Base, dmm.MultiPoint, dmm.SoftwareTrigger,
         # num_of_measurements may be larger than _READING_MEMORY_SIZE, we will
         # return at most _READING_MEMORY_SIZE results anyway.
         readings = []
-        start = time.time()
         # The instrument has no seek instruction, so always read through the
         # entire memory, even if we do not want to save all of them.
         for num in range(self._READINGS_MEMORY_SIZE):
