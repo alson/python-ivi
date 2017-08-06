@@ -155,7 +155,6 @@ class keithley192(ivi.Driver, dmm.Base, dmm.MultiPoint, dmm.SoftwareTrigger,
         if not self._driver_operation_simulate:
             # Defaults according to the programming manual, except set for one
             # shot trigering on X
-            # use _ask to clear the result of the measurement we may have triggered
             self._write("F0R5Z0T5S6W1Q0K0M0Y\nX")
             self.driver_operation.invalidate_all_attributes()
 
