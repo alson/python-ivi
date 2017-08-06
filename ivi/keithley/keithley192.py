@@ -26,6 +26,7 @@ THE SOFTWARE.
 """
 
 from __future__ import division
+from __future__ import print_function
 import warnings
 import re
 from collections import OrderedDict
@@ -169,7 +170,7 @@ class keithley192(ivi.Driver, dmm.Base, dmm.MultiPoint, dmm.SoftwareTrigger,
         This is necessary because the only possible software triggers are GET
         (bus triggering), on any talk and on X.
         """
-        print(data, "\n")
+        #print(data, "\n")
         if clear_data and data[-1] == 'X' \
                 and self._trigger_source.lower() == 'imm':
             # Do immediate read to clear the result triggered by X when set to
