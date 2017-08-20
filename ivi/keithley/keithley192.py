@@ -82,7 +82,7 @@ class keithley192(ivi.Driver, dmm.Base, dmm.MultiPoint, dmm.SoftwareTrigger,
       there appears to be no way to detect its presence except by attempting to
       switch to ACV (F1/F3) and checking for errors.
     - Handling errors from the meter.
-    - Variable integration interval (100 ms) or digital filtering (filter 1).
+    - Variable integration interval (100 ms) or digital filtering (filter 2).
     - Changing the resolution (6.5 digit).
     - The idle state as defined for IviDmm: unless the trigger source is
       immediate, after measurement complete it will return to the
@@ -155,8 +155,8 @@ class keithley192(ivi.Driver, dmm.Base, dmm.MultiPoint, dmm.SoftwareTrigger,
     def _utility_reset(self):
         if not self._driver_operation_simulate:
             # Defaults according to the programming manual, except set for one
-            # shot trigering on X
-            self._write("F0R5Z0T5S6W1Q0K0M0Y\nX")
+            # shot trigering on X and 100 ms integration with filter 2 (6.5d)
+            self._write("F0R5Z0T5S7W1Q0K0M0Y\nX")
             self.driver_operation.invalidate_all_attributes()
 
     def _utility_self_test(self):
