@@ -29,6 +29,8 @@ import io
 import unittest
 
 from .. import keithley2000
+from ...swtch import PathNotFoundException
+from ...ivi import SelectorNameException
 
 class Virtual2000(object):
     def __init__(self):
@@ -40,6 +42,7 @@ class Virtual2000(object):
         self.cmds = {
             '*cls' : None,
             '*idn?' : str,
+            '*opt?' : str,
             '*rst' : None,
             '*trg' : None,
             '*tst?' : int,
@@ -108,9 +111,12 @@ class Virtual2000(object):
             'sample:count?' : int,
             'trigger:count' : int,
             'trigger:count?' : int,
+            'route:close': str,
+            'route:open:all': None,
         }
         self.vals = {
             '*idn' : 'KEITHLEY INSTRUMENTS INC.,MODEL 2000,0,A06  /A02  ',
+            '*opt' : '0, 200X-SCAN',
             '*tst' : 0,
             'system:error' : '+0,"No error"',
             'fetch?' : 1.0,
@@ -145,6 +151,7 @@ class Virtual2000(object):
             'trigger:source' : 'imm',
             'sample:count' : 1,
             'trigger:count' : 1,
+            'route:close': None,
         }
 
         for n in range(4):
@@ -190,9 +197,9 @@ class Virtual2000(object):
             elif t is float:
                 self.vals[cmd] = float(data.split(b' ')[1].decode())
             elif t is str:
-                self.vals[cmd] = data.split(b' ')[1].decode()
+                self.vals[cmd] = data.split(b' ',1)[1].decode()
             elif t == 'qstr':
-                self.vals[cmd] = data.split(b' ')[1].decode().strip("'\"")
+                self.vals[cmd] = data.split(b' ',1)[1].decode().strip("'\"")
 
     def read_raw(self, num=-1):
         return self.read_buffer.read(num)
@@ -441,3 +448,57 @@ class TestKeithley2000(unittest.TestCase):
         self.dmm.send_software_trigger()
         self.assertEqual('*trg' in self.vdmm.cmd_log, True)
 
+    def test_path_can_connect(self):
+        self.assertTrue(self.dmm.path.can_connect('common', 'channel1'))
+        self.assertTrue(self.dmm.path.can_connect('channel1', 'common'))
+        self.assertTrue(self.dmm.path.can_connect('channel10', 'common'))
+        self.assertFalse(self.dmm.path.can_connect('channel1', 'channel1'))
+        self.assertFalse(self.dmm.path.can_connect('channel1', 'channel2'))
+        self.assertFalse(self.dmm.path.can_connect('common', 'common'))
+        with self.assertRaises(SelectorNameException):
+            self.assertFalse(self.dmm.path.can_connect('coon', 'common'))
+
+    def test_path_connect(self):
+        self.dmm.path.connect('common', 'channel1')
+        self.assertIn('route:close', self.vdmm.cmd_log)
+        self.assertEqual(self.vdmm.vals['route:close'], '(@ 1)')
+        self.vdmm.cmd_log.clear()
+        self.dmm.path.connect('common', 'channel10')
+        self.assertIn('route:close', self.vdmm.cmd_log)
+        self.assertEqual(self.vdmm.vals['route:close'], '(@ 10)')
+        self.vdmm.cmd_log.clear()
+        self.dmm.path.connect('channel1', 'common')
+        self.assertIn('route:close', self.vdmm.cmd_log)
+        self.assertEqual(self.vdmm.vals['route:close'], '(@ 1)')
+        self.vdmm.cmd_log.clear()
+        with self.assertRaises(PathNotFoundException):
+            self.dmm.path.connect('channel1', 'channel2')
+        with self.assertRaises(PathNotFoundException):
+            self.dmm.path.connect('channel1', 'channel1')
+        with self.assertRaises(PathNotFoundException):
+            self.dmm.path.connect('common', 'common')
+        with self.assertRaises(SelectorNameException):
+            self.dmm.path.connect('coon', 'common')
+
+    def test_path_disconnect(self):
+        self.dmm.path.disconnect('common', 'channel1')
+        self.assertIn('route:open:all', self.vdmm.cmd_log)
+        self.vdmm.cmd_log.clear()
+        self.dmm.path.disconnect('common', 'channel10')
+        self.assertIn('route:open:all', self.vdmm.cmd_log)
+        self.vdmm.cmd_log.clear()
+        self.dmm.path.disconnect('channel1', 'common')
+        self.assertIn('route:open:all', self.vdmm.cmd_log)
+        self.vdmm.cmd_log.clear()
+        with self.assertRaises(PathNotFoundException):
+            self.dmm.path.disconnect('channel1', 'channel2')
+        with self.assertRaises(PathNotFoundException):
+            self.dmm.path.disconnect('channel1', 'channel1')
+        with self.assertRaises(PathNotFoundException):
+            self.dmm.path.disconnect('common', 'common')
+        with self.assertRaises(SelectorNameException):
+            self.dmm.path.disconnect('coon', 'common')
+
+    def test_path_disconnect_all(self):
+        self.dmm.path.disconnect_all()
+        self.assertIn('route:open:all', self.vdmm.cmd_log)

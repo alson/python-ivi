@@ -33,6 +33,7 @@ import math
 
 from .. import ivi
 from .. import dmm
+from .. import swtch
 from .. import scpi
 
 MeasurementFunctionMapping = {
@@ -71,15 +72,18 @@ MeasurementResolutionMapping = {
         'two_wire_resistance': 'res:dig',
         'four_wire_resistance': 'fres:dig'}
 
-class keithley2000(scpi.dmm.Base, scpi.dmm.MultiPoint, scpi.dmm.SoftwareTrigger):
+class keithley2000(scpi.dmm.Base, scpi.dmm.MultiPoint, scpi.dmm.SoftwareTrigger,
+        swtch.Base):
     "Keithley 2000 IVI DMM driver"
 
     def __init__(self, *args, **kwargs):
         self.__dict__.setdefault('_instrument_id', 'MODEL 2000')
+        self._channel_count = 1
 
         super(keithley2000, self).__init__(*args, **kwargs)
 
         self._memory_size = 5
+        self._scanner_installed = False
 
         self._identity_description = "Keithley model 2000 IVI DMM driver"
         self._identity_identifier = ""
@@ -91,6 +95,7 @@ class keithley2000(scpi.dmm.Base, scpi.dmm.MultiPoint, scpi.dmm.SoftwareTrigger)
         self._identity_specification_major_version = 4
         self._identity_specification_minor_version = 1
         self._identity_supported_instrument_models = ['MODEL 2000']
+        self._real_init_channels()
 
     def _initialize(self, resource = None, id_query = False, reset = False, **keywargs):
         "Opens an I/O session to the instrument."
@@ -112,6 +117,82 @@ class keithley2000(scpi.dmm.Base, scpi.dmm.MultiPoint, scpi.dmm.SoftwareTrigger)
         # reset
         if reset:
             self.utility.reset()
+
+    def _load_id_string(self):
+        super(keithley2000, self)._load_id_string()
+        if not self._driver_operation_simulate:
+            opts = self._ask('*OPT?')
+            if '200X-SCAN' in opts:
+                self._scanner_installed = True
+                self._set_cache_valid(True, 'scanner_installed')
+                self._init_channels()
+
+    def _get_scanner_installed(self):
+        if not self._get_cache_valid():
+            self._load_id_string()
+        return self._scanner_installed
+
+    def _init_channels(self):
+        # We need to access the instrument to determine channel count, but IVI
+        # is not initialized when this method is called, so supply a stub and
+        # substitute a _real_init_channels() that we call at the end of
+        # __init__().
+        pass
+
+    def _real_init_channels(self):
+        # Only do this if we have a scanner installed
+        if not self._get_scanner_installed():
+            return
+
+        try:
+            super(keithley2000, self)._init_channels()
+        except AttributeError:
+            pass
+
+        self._channel_count = 10
+        self._channel_name = list()
+        self._int_channel_name = list()
+        self._channel_characteristics_ac_current_carry_max = list()
+        self._channel_characteristics_ac_current_switching_max = list()
+        self._channel_characteristics_ac_power_carry_max = list()
+        self._channel_characteristics_ac_power_switching_max = list()
+        self._channel_characteristics_ac_voltage_max = list()
+        self._channel_characteristics_bandwidth = list()
+        self._channel_characteristics_impedance = list()
+        self._channel_characteristics_dc_current_carry_max = list()
+        self._channel_characteristics_dc_current_switching_max = list()
+        self._channel_characteristics_dc_power_carry_max = list()
+        self._channel_characteristics_dc_power_switching_max = list()
+        self._channel_characteristics_dc_voltage_max = list()
+        self._channel_is_configuration_channel = list()
+        self._channel_is_source_channel = list()
+        self._channel_characteristics_settling_time = list()
+        self._channel_characteristics_wire_mode = list()
+        self._init_single_channel("common", None)
+        for i in range(self._channel_count):
+            self._init_single_channel("channel%d" % (i+1), i+1)
+
+        self.channels._set_list(self._channel_name)
+
+    def _init_single_channel(self, name, int_name):
+        self._channel_name.append(name)
+        self._int_channel_name.append(int_name)
+        self._channel_characteristics_ac_current_carry_max.append(1)
+        self._channel_characteristics_ac_current_switching_max.append(1)
+        self._channel_characteristics_ac_power_carry_max.append(62.5)
+        self._channel_characteristics_ac_power_switching_max.append(62.5)
+        self._channel_characteristics_ac_voltage_max.append(125)
+        self._channel_characteristics_bandwidth.append(1e5)
+        self._channel_characteristics_impedance.append(None)
+        self._channel_characteristics_dc_current_carry_max.append(1)
+        self._channel_characteristics_dc_current_switching_max.append(1)
+        self._channel_characteristics_dc_power_carry_max.append(30)
+        self._channel_characteristics_dc_power_switching_max.append(30)
+        self._channel_characteristics_dc_voltage_max.append(110)
+        self._channel_is_configuration_channel.append(False)
+        self._channel_is_source_channel.append(False)
+        self._channel_characteristics_settling_time.append(0.0025)
+        self._channel_characteristics_wire_mode.append(2)
 
     def _get_resolution(self):
         # The DMM only supports specifying the resolution in digits, while the
@@ -149,3 +230,39 @@ class keithley2000(scpi.dmm.Base, scpi.dmm.MultiPoint, scpi.dmm.SoftwareTrigger)
                 self._write("%s %g" % (cmd, dig))
         self._resolution = value
         self._set_cache_valid()
+
+    def _path_can_connect(self, channel1, channel2):
+        channel1 = ivi.get_index(self._channel_name, channel1)
+        channel2 = ivi.get_index(self._channel_name, channel2)
+        if (channel1 != channel2) and ('common' in [self._channel_name[chan] for
+            chan in (channel1, channel2)]):
+            return True
+        else:
+            return False
+
+    def _path_connect(self, channel1, channel2):
+        channel1 = ivi.get_index(self._channel_name, channel1)
+        channel2 = ivi.get_index(self._channel_name, channel2)
+        if not self._path_can_connect(channel1, channel2):
+            raise swtch.PathNotFoundException('{0} -> {1}'.format(channel1,
+                channel2))
+        src = [chan for chan in (channel1, channel2) if self._channel_name[chan]
+                != 'common']
+        if len(src) != 1:
+            raise swtch.PathNotFoundException('{0} -> {1}'.format(channel1,
+                channel2))
+        self._write('ROUTE:CLOSE (@ {0})'.format(self._int_channel_name[src[0]]))
+
+    def _path_disconnect(self, channel1, channel2):
+        channel1 = ivi.get_index(self._channel_name, channel1)
+        channel2 = ivi.get_index(self._channel_name, channel2)
+        if not self._path_can_connect(channel1, channel2):
+            raise swtch.PathNotFoundException('{0} -> {1}'.format(channel1,
+                channel2))
+        self._write('ROUTE:OPEN:ALL')
+
+    def _path_disconnect_all(self):
+        self._write('ROUTE:OPEN:ALL')
+
+    def _path_wait_for_debounce(self, maximum_time):
+        time.sleep(0.01)
