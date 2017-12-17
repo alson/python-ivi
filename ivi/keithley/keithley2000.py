@@ -79,11 +79,11 @@ class keithley2000(scpi.dmm.Base, scpi.dmm.MultiPoint, scpi.dmm.SoftwareTrigger,
     def __init__(self, *args, **kwargs):
         self.__dict__.setdefault('_instrument_id', 'MODEL 2000')
         self._channel_count = 1
+        self._scanner_installed = False
 
         super(keithley2000, self).__init__(*args, **kwargs)
 
         self._memory_size = 5
-        self._scanner_installed = False
 
         self._identity_description = "Keithley model 2000 IVI DMM driver"
         self._identity_identifier = ""
