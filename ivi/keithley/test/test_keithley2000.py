@@ -164,7 +164,7 @@ class Virtual2000(object):
         self.rx_log.append(data)
         cmd = data.split(b' ')[0].decode()
 
-        print("Got command %s" % cmd)
+        print("Got command %s" % data)
 
         cmd = cmd.lower().lstrip(':')
 
