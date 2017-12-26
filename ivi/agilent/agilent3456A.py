@@ -197,15 +197,15 @@ class agilent3456A(ivi.Driver, dmm.Base, dmm.MultiPoint, dmm.SoftwareTrigger):
         if self._trigger_source == 'immediate':
             self._write('T3')
 
-    def _measurement_fetch(self):
+    def _measurement_fetch(self, max_time):
         if self._driver_operation_simulate:
             return
         raw_result = self._read()
         return self._parse_measurement_result(raw_result)
 
-    def _measurement_read(self):
+    def _measurement_read(self, max_time):
         self._measurement_initiate()
-        return self._measurement_fetch()
+        return self._measurement_fetch(max_time)
 
     def _measurement_is_over_range(self, value):
         return value >= +1999999e+9
