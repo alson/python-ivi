@@ -207,13 +207,13 @@ class keithley192(ivi.Driver, dmm.Base, dmm.MultiPoint, dmm.SoftwareTrigger,
         self._internal_setup_multi_point()
         self._write('X', clear_data=False)
 
-    def _measurement_fetch(self):
+    def _measurement_fetch(self, max_time):
         if self._driver_operation_simulate:
             return
         raw_result = self._read()
         return self._parse_measurement_result(raw_result)
 
-    def _measurement_read(self):
+    def _measurement_read(self, max_time):
         if self._driver_operation_simulate:
             return
         raw_result = self._ask('X')
