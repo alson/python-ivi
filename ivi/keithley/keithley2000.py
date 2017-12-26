@@ -224,7 +224,7 @@ class keithley2000(scpi.dmm.Base, scpi.dmm.MultiPoint, scpi.dmm.SoftwareTrigger,
             range_ = self.range
             func = self._get_measurement_function()
             if func in MeasurementResolutionMapping:
-                # Convert absolute resoltuion resolution to digits
+                # Convert absolute resolution resolution to digits
                 dig = math.ceil(math.log10(range_ / value)+1)
                 cmd = MeasurementResolutionMapping[func]
                 self._write("%s %g" % (cmd, dig))
