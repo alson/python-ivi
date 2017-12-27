@@ -173,9 +173,9 @@ class agilent3458A(ivi.Driver, dmm.Base, dmm.SoftwareTrigger):
         raw_result = self._read()
         return self._parse_measurement_result(raw_result)
 
-    def _measurement_read(self):
+    def _measurement_read(self, max_time):
         self._measurement_initiate()
-        return self._measurement_fetch()
+        return self._measurement_fetch(max_time)
 
     def _measurement_is_over_range(self, value):
         return value >= +1e38
