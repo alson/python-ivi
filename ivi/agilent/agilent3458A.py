@@ -143,7 +143,7 @@ class agilent3458A(ivi.Driver, dmm.Base, dmm.SoftwareTrigger):
             self._clear()
             self._write('PRESET NORM; OFORMAT ASCII; TARM AUTO; TRIG SGL;' +
                     'NPLC 100; NRDGS 1,AUTO; MEM OFF; NDIG 9;' +
-                    'DISP MSG,"                 "; DISP OFF')
+                    'DISP OFF,"                 "')
             self.driver_operation.invalidate_all_attributes()
 
     def _utility_self_test(self):
