@@ -188,6 +188,7 @@ from .agilent34410A import agilent34410A
 from .agilent34411A import agilent34411A
 from .agilent34461A import agilent34461A
 from .agilent3456A import agilent3456A
+from .agilent3458A import agilent3458A
 
 # DC Power Supplies
 # 603xA
