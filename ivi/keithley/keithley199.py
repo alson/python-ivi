@@ -197,7 +197,7 @@ class keithley199(ivi.Driver, dmm.Base, dmm.MultiPoint, dmm.SoftwareTrigger):
         This is necessary because the only possible software triggers are GET
         (bus triggering), on any talk and on X.
         """
-        print(data, "\n")
+        #print(data, "\n")
         if clear_data and data[-1] == 'X' \
                 and self._trigger_source.lower() == 'immediate':
             # Do immediate read to clear the result triggered by X when set to
@@ -211,8 +211,7 @@ class keithley199(ivi.Driver, dmm.Base, dmm.MultiPoint, dmm.SoftwareTrigger):
         pass
 
     def _parse_measurement_result(self, raw_result):
-        matches = re.fullmatch(r'([OZN])(DCV|ACV|DCI|ACI|OHM)([+-][0-9.]{8}E[+-]\d),B\d{3},C\d',
-                raw_result)
+        matches = re.fullmatch(r'([OZN])(DCV|ACV|DCI|ACI|OHM)([+-][0-9.]{8}E[+-]\d)', raw_result)
         if not matches:
             raise ivi.UnexpectedResponseException(
                 'Unexpected response: {0}'.format(raw_result))
@@ -281,7 +280,6 @@ class keithley199(ivi.Driver, dmm.Base, dmm.MultiPoint, dmm.SoftwareTrigger):
         if value.lower() not in MeasurementFunctionMapping:
             raise ivi.ValueNotSupportedException()
         super(keithley199, self)._set_measurement_function(value)
-        print('M', value)
         self._write('F{0}X'.format(MeasurementFunctionMapping[value.lower()]),
                     clear_data=True)
 
