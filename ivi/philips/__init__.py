@@ -25,3 +25,5 @@ THE SOFTWARE.
 """
 
 # Digital multimeters
+from .philipsPM2534 import philipsPM2534
+
