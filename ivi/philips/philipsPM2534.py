@@ -176,7 +176,7 @@ class philipsPM2534(ivi.Driver, dmm.Base, dmm.DeviceInfo):
         pass
 
     def _parse_measurement_result(self, raw_result):
-        matches = re.fullmatch(r'([A-Z]{3})  ([O ]) +([+-]?[0-9.]{5,8}E[+-][0-9]{2})',
+        matches = re.fullmatch(r'([A-Z]{3}) +([O ]) +([+-]?[0-9.]{5,8}E[+-][0-9]{2})',
                 raw_result)
         if not matches:
             raise ivi.UnexpectedResponseException('Unexpected response: {0}'.format(
