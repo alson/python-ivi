@@ -407,6 +407,8 @@ class keithley237(keithley236):
                     'P1100V10nA': (1100.0, 10e-9),
                     'P1100V1nA': (1100.0, 1e-9),
                 })
+        self._output_spec[0].update({'voltage_max': 1100.0,
+                                     'current_max': 0.1})
 
         self._identity_description = "Keitley 237 Source Measure Unit driver"
         self._identity_instrument_model = "237"
