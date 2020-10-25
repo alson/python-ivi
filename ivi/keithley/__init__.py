@@ -25,6 +25,10 @@ THE SOFTWARE.
 
 """
 
+# Source measure units
+from .keithley236 import keithley236
+from .keithley236 import keithley237
+
 # Digital multimeters
 from .keithley199 import keithley199
 from .keithley2000 import keithley2000
